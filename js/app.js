@@ -7,9 +7,31 @@ App.Store = DS.Store.extend({
 
 App.Router.map(function(){
     this.resource('about')
-    this.resource('posts')
+    this.resource('posts', function(){
+        this.resource('post', {path : ':post_id'})
+    })
 })
 
+App.IndexRoute = Ember.Route.extend({
+    redirect: function(){
+        this.transitionTo('posts')
+    }
+})
+App.PostsRoute = Ember.Route.extend({
+    model: function(){
+       return App.Post.find()
+    }
+})
+
+App.PostController = Ember.ObjectController.extend({
+    isEditing: false,
+    edit: function(){
+        this.set('isEditing', true)
+    },
+    doneEditing: function(){
+        this.set('isEditing', false)
+    }
+})
 App.Post = DS.Model.extend({
     title: DS.attr('string'),
     author: DS.attr('string'),
@@ -33,3 +55,13 @@ App.Post.FIXTURES = [{
     intro: "My [appearance on the Ruby Rogues podcast](http://rubyrogues.com/056-rr-david-heinemeier-hansson/) recently came up for discussion again on the private Parley mailing list.",
     extended: "A long list of topics were raised and I took a time to ramble at large about all of them at once. Apologies for not taking the time to be more succinct, but at least each topic has a header so you can skip stuff you don't care about.\n\n### Maintainability\n\nIt's simply not true to say that I don't care about maintainability. I still work on the oldest Rails app in the world."  
 }];
+
+Ember.Handlebars.registerBoundHelper('date', function(date){
+    return moment(date).fromNow()
+})
+
+var showdown = new Showdown.converter()
+
+Ember.Handlebars.registerBoundHelper('markdown', function(input){
+    return new Ember.Handlebars.SafeString(showdown.makeHtml(input))
+})
